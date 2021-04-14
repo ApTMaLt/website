@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method=post enctype=multipart/form-data>
+ <input type=file name=file>
+ <p>
+        {{ form.tegs.label }}<br>
+        {{ form.tegs(class="form-control") }}<br>
+        {% for error in form.tegs.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+ <p>
+        {{ form.about.label }}<br>
+        {{ form.about(class="form-control") }}<br>
+        {% for error in form.about.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+ <input type=submit value=Upload>
+ </form>
+<h1>{{title}}</h1>
+{% endblock %}
