@@ -4,13 +4,14 @@ from data.login import LoginForm
 from data.users import User
 from data.posts import Posts
 from forms.user import RegisterForm
+from forms.profil import ProfilForm
 from forms.post import PostForm
 import os
 from flask import Flask, flash, request, redirect, url_for, render_template, make_response, session, abort
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = 'static/img/'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'dng', 'png', 'jpg', 'jpeg'}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
@@ -20,7 +21,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
     return '.' in filename and \
- filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/")
@@ -49,6 +50,10 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
+        if db_sess.query(User).filter(User.username == form.username.data).first():
+            return render_template('register.html', title='Регистрация',
+                                   form=form,
+                                   message="Такой никнейм занят")
         user = User(
             name=form.name.data,
             surname=form.surname.data,
@@ -60,6 +65,35 @@ def reqister():
         db_sess.commit()
         return redirect('/')
     return render_template('register.html', title='Регистрация', form=form)
+
+
+@app.route('/profil/', methods=['GET', 'POST'])
+def profil():
+    form = ProfilForm()
+    if form.validate_on_submit():
+        if not(current_user.check_password(form.old_password.data)):
+            return render_template('profil.html', title='Профиль',
+                                   form=form,
+                                   message="Введён неверный старый пароль")
+        if form.password.data != form.password_again.data:
+            return render_template('profil.html', title='Регистрация',
+                                   form=form,
+                                   message="Новые пароли не совпадают")
+        db_sess = db_session.create_session()
+        if db_sess.query(User).filter(User.username == form.username.data).first() and\
+                current_user.id != db_sess.query(User).filter(User.username == form.username.data).first().id:
+            return render_template('profil.html', title='Регистрация',
+                                   form=form,
+                                   message="Такой никнейм занят")
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        user.name = form.name.data
+        user.surname = form.surname.data
+        user.username = form.username.data
+        user.about = form.about.data
+        user.set_password(form.password.data)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('profil.html', title='Регистрация', form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -84,21 +118,22 @@ def logout():
     return redirect("/")
 
 
-@app.route('/job',  methods=['GET', 'POST'])
+@app.route('/post', methods=['GET', 'POST'])
 @login_required
 def add_news():
     form = PostForm()
     db_sess = db_session.create_session()
     posts = Posts()
-    print('g')
     if request.method == 'POST':
         if 'file' not in request.files:
+            print('1')
             flash('No file part')
             return redirect(request.url)
         file = request.files['file']
         if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
+            return render_template('post.html',
+                                   message="Файл не выбран",
+                                   form=form)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
