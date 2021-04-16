@@ -6,7 +6,8 @@ from sqlalchemy_serializer import SerializerMixin
 
 class Posts(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'posts'
-    f_s_l = sqlalchemy.Column(sqlalchemy.String)  # file storage location
+    original_f_s_l = sqlalchemy.Column(sqlalchemy.String)  # original file storage location
+    scaled_f_s_l = sqlalchemy.Column(sqlalchemy.String)  # scaled file storage location
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     user_uploud = sqlalchemy.Column(sqlalchemy.Integer,

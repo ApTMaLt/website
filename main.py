@@ -7,16 +7,37 @@ from forms.user import RegisterForm
 from forms.profil import ProfilForm
 from forms.post import PostForm
 import os
-from flask import Flask, flash, request, redirect, url_for, render_template, make_response, session, abort
+from flask import Flask, flash, request, redirect, url_for, render_template, make_response, session, abort, send_file
 from werkzeug.utils import secure_filename
+from PIL import Image
 
-UPLOAD_FOLDER = 'static/img/'
+UPLOAD_FOLDER = 'static/img/original/'
 ALLOWED_EXTENSIONS = {'dng', 'png', 'jpg', 'jpeg'}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+def scale_image(input_image_path,
+                output_image_path,
+                width=None,
+                height=None
+                ):
+    original_image = Image.open(input_image_path)
+    w, h = original_image.size
+    if width and height:
+        max_size = (width, height)
+    elif width:
+        max_size = (width, h)
+    elif height:
+        max_size = (w, height)
+    else:
+        # No width or height specified
+        raise RuntimeError('Width or height required!')
+    original_image.thumbnail(max_size, Image.ANTIALIAS)
+    original_image.save(output_image_path)
 
 
 def allowed_file(filename):
@@ -28,7 +49,11 @@ def allowed_file(filename):
 def index():
     db_sess = db_session.create_session()
     posts = db_sess.query(Posts)
-    return render_template("index.html", posts=posts)
+    gg = []
+    for i in posts:
+        gg.append(i)
+    gg.sort(key=lambda x: x.id, reverse=True)
+    return render_template("index.html", posts=gg)
 
 
 @login_manager.user_loader
@@ -126,7 +151,6 @@ def add_news():
     posts = Posts()
     if request.method == 'POST':
         if 'file' not in request.files:
-            print('1')
             flash('No file part')
             return redirect(request.url)
         file = request.files['file']
@@ -137,7 +161,11 @@ def add_news():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            posts.f_s_l = 'static/img/' + str(filename)
+            scale_image(input_image_path='static/img/original/' + str(filename),
+                        output_image_path='static/img/scaled/' + str(filename),
+                        width=800)
+            posts.original_f_s_l = 'static/img/original/' + str(filename)
+            posts.scaled_f_s_l = 'static/img/scaled/' + str(filename)
             posts.tegs = form.tegs.data
             posts.about = form.about.data
             posts.is_private = form.is_private.data
@@ -147,6 +175,13 @@ def add_news():
             return redirect('/')
     return render_template('post.html', title='Добавление работы',
                            form=form)
+
+
+@app.route('/download/<int:id>')
+def download_file(id):
+    db_sess = db_session.create_session()
+    post_download = db_sess.query(Posts).filter(Posts.id == id).first()
+    return send_file(post_download.original_f_s_l)
 
 
 @app.route('/job/<int:id>', methods=['GET', 'POST'])
