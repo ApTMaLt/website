@@ -1,6 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
+<p>Какую страницу желаете открыть?</p>
+    <form>
+        <input id="btn1" type="button" value="Страница 1">
+        <input id="btn2" type="button" value="Страница 2">
+    </form>
+    <div id="content"></div>
+
+    <script>
+        $(document).ready(function(){
+
+            $('#btn1').click(function(){
+                $.ajax({
+                    url: "/",
+                    cache: false,
+                    success: function(html){
+                        $("#content").html(html);
+                    }
+                });
+            });
+
+            $('#btn2').click(function(){
+                $.ajax({
+                    url: "/register",
+                    cache: false,
+                    success: function(html){
+                        $("#content").html(html);
+                    }
+                });
+            });
+
+        });
+    </script>
 {% if current_user.is_authenticated %}
     <a href="post" class="btn btn-secondary">Добавить новость</a>
 {% endif %}

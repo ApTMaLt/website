@@ -5,6 +5,7 @@ from data.users import User
 from data.posts import Posts
 from forms.user import RegisterForm
 from forms.profil import ProfilForm
+from forms.search import SearchForm
 from forms.post import PostForm
 import os
 from flask import Flask, flash, request, redirect, url_for, render_template, make_response, session, abort, send_file
@@ -18,6 +19,12 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+def search():
+    searchform = SearchForm()
+    if searchform.validate_on_submit():
+        return searchform.search.data
 
 
 def scale_image(input_image_path,
@@ -45,15 +52,19 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def index():
+    searchform = SearchForm()
+    bb = search()
+    if not bb:
+        bb = ''
     db_sess = db_session.create_session()
-    posts = db_sess.query(Posts)
+    posts = db_sess.query(Posts).filter(Posts.tegs.like(f'%{bb}%'))
     gg = []
     for i in posts:
         gg.append(i)
     gg.sort(key=lambda x: x.id, reverse=True)
-    return render_template("index.html", posts=gg)
+    return render_template("index.html", posts=gg, searchform=searchform)
 
 
 @login_manager.user_loader
@@ -92,7 +103,7 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/profil/', methods=['GET', 'POST'])
+@app.route('/profil', methods=['GET', 'POST'])
 def profil():
     form = ProfilForm()
     if form.validate_on_submit():
