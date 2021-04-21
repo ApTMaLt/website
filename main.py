@@ -11,6 +11,7 @@ import os
 from flask import Flask, flash, request, redirect, url_for, render_template, make_response, session, abort, send_file
 from werkzeug.utils import secure_filename
 from PIL import Image
+import requests
 
 UPLOAD_FOLDER = 'static/img/original/'
 ALLOWED_EXTENSIONS = {'dng', 'png', 'jpg', 'jpeg'}
@@ -65,6 +66,24 @@ def index():
         gg.append(i)
     gg.sort(key=lambda x: x.id, reverse=True)
     return render_template("index.html", posts=gg, searchform=searchform)
+
+
+@app.route("/unsplash", methods=['GET', 'POST'])
+def unsplash():
+    searchform = SearchForm()
+    bb = search()
+    if not bb:
+        bb = ''
+    geocoder_request = [
+        "https://api.unsplash.com/photos/random?client_id=x&count=15", ]
+    for i in geocoder_request:
+        response = requests.get(i)
+        if response:
+            # Преобразуем ответ в json-объект
+            gg = response.json()
+        else:
+            print(response)
+    return render_template("unsplash.html", posts=gg, searchform=searchform)
 
 
 @login_manager.user_loader

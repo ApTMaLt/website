@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% if current_user.is_authenticated %}
-    <a href="post" class="btn btn-secondary">Добавить новость</a>
-{% endif %}
 <form action="" method="post">
     {{ searchform.hidden_tag() }}
     <p>
@@ -25,7 +22,7 @@
     {% for item in posts %}
     <a href="#lightbox" data-toggle="modal" data-slide-to={{loop.index0}}>
   <section>
-      <img src={{item.scaled_f_s_l}} height="100%" width="100%">
+      <img src={{item['urls']['regular']}} height="100%" width="100%">
       </section>
     </a>
     {% endfor %}
@@ -46,17 +43,17 @@
               {% set a = item.id %}
                     <div class="carousel-item active">
                         <p>{{a}}</p>
-                      <img class="d-block img-fluid" src={{item.original_f_s_l}} alt={{loop.index0}}>
-                        <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
-                        <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
+                      <img class="d-block img-fluid" src={{item['urls']['full']}} alt={{loop.index0}}>
+                        <a href="https://api.unsplash.com/photos/{{item['id']}}/download?client_id=x" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
+                        <a href="https://api.unsplash.com/photos/{{item['id']}}/download?client_id=x" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
                     </div>
                 {% else %}
               {% set a = item.id %}
                     <div class="carousel-item">
                         <p>{{a}}</p>
-                      <img class="d-block img-fluid" src={{item.original_f_s_l}} alt={{loop.index0}}>
-                        <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
-                        <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
+                      <img class="d-block img-fluid" src={{item['urls']['full']}} alt={{loop.index0}}>
+                        <a href="https://api.unsplash.com/photos/{{item['id']}}/download?client_id=x" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
+                        <a href="https://api.unsplash.com/photos/{{item['id']}}/download?client_id=x" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
                     </div>
                 {% endif %}
               {% endfor %}

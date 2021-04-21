@@ -17,7 +17,7 @@
     <title>{{title}}</title>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #5d5d5d">
+<nav class="navbar sticky-top navbar-light" style="background-color: #5d5d5d">
   <a class="navbar-brand" href="/"><h1>Piconic</h1></a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -47,29 +47,13 @@
       </li>
     </ul>
       {% if current_user.is_authenticated %}
-    <a class="navbar-brand" href="/profil/"><img src={{current_user.avatar}} width="5%" height="5%">{{ current_user.name }} </a>
+    <a class="navbar-brand" href="/profil"><img src={{current_user.avatar}} width="5%" height="5%">{{ current_user.name }} </a>
     {% else %}
     <p>
         <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
         <a class="btn btn-success" href="/login">Войти</a>
     </p>
 {% endif %}
-    <form action="" method="post">
-    {{ searchform.hidden_tag() }}
-    <p>
-        {{ searchform.search.label }}<br>
-        {{ searchform.search(class="form-control") }}<br>
-        {% for error in searchform.search.errors %}
-            <p class="alert alert-danger" role="alert">
-                {{ error }}
-            </p>
-        {% endfor %}
-    </p>
-    <p>{{ searchform.submit(type="submit", class="btn btn-primary") }}</p>
-    {{message}}
-    <a class="btn btn-danger" href="/logout">Выйти</a>
-</form>
-
   </div>
 </nav>
 <!-- Begin page content -->
