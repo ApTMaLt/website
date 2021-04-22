@@ -8,8 +8,5 @@ class ProfilForm(FlaskForm):
     name = StringField('Имя', validators=[DataRequired()])
     surname = StringField('Фамилия', validators=[DataRequired()])
     username = StringField('Никнейм', validators=[DataRequired()])
-    old_password = PasswordField('Старый пароль', validators=[DataRequired()])
-    password = PasswordField('Новый пароль', validators=[DataRequired()])
-    password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
     about = TextAreaField('Немного о себе', validators=[DataRequired()])
     submit = SubmitField('Сохранить', validators=[DataRequired()])
