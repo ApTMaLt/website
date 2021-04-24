@@ -2,7 +2,11 @@
 
 {% block content %}
 <form method=post enctype=multipart/form-data>
- <input type=file name=file>
+    {% if title == 'Редактирование поста' %}
+        <img src=/{{post.scaled_f_s_l}} alt={{post.id}}>
+    {% else %}
+    <input type=file name=file>
+    {% endif %}
  <p>
         {{ form.tegs.label }}<br>
         {{ form.tegs(class="form-control") }}<br>
@@ -21,7 +25,6 @@
             </p>
         {% endfor %}
     </p>
- <input type=submit value=Upload>
+ <input type=submit value=Сохранить>
  </form>
-<h1>{{title}}</h1>
 {% endblock %}

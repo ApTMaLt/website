@@ -22,12 +22,6 @@ login_manager.init_app(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-def search():
-    searchform = SearchForm()
-    if searchform.validate_on_submit():
-        return searchform.search.data
-
-
 def scale_image(input_image_path,
                 output_image_path,
                 width=None,
@@ -56,8 +50,9 @@ def allowed_file(filename):
 @app.route("/", methods=['GET', 'POST'])
 def index():
     searchform = SearchForm()
-    bb = search()
-    if not bb:
+    if searchform.validate_on_submit():
+        bb = searchform.search.data
+    else:
         bb = ''
     db_sess = db_session.create_session()
     posts = db_sess.query(Posts).filter(Posts.tegs.like(f'%{bb}%'))
@@ -71,16 +66,23 @@ def index():
 @app.route("/unsplash", methods=['GET', 'POST'])
 def unsplash():
     searchform = SearchForm()
-    bb = search()
-    if not bb:
+    if searchform.validate_on_submit():
+        bb = searchform.search.data
+    else:
         bb = ''
-    geocoder_request = [
-        "https://api.unsplash.com/photos/random?client_id=x&count=15", ]
+    if bb != '':
+        geocoder_request = [
+            f"https://api.unsplash.com/search/photos?client_id=x&query={bb}&per_page=30"]
+    else:
+        geocoder_request = [
+            "https://api.unsplash.com/photos/random?client_id=x&count=30"]
     for i in geocoder_request:
         response = requests.get(i)
         if response:
-            # Преобразуем ответ в json-объект
             gg = response.json()
+            # Преобразуем ответ в json-объект
+            if bb != '':
+                gg = gg['results']
         else:
             print(response)
     return render_template("unsplash.html", posts=gg, searchform=searchform)
@@ -125,17 +127,24 @@ def reqister():
 @app.route('/profil', methods=['GET', 'POST'])
 def profil():
     form = ProfilForm()
-    if form.validate_on_submit():
-        if not(current_user.check_password(form.old_password.data)):
-            return render_template('profil.html', title='Профиль',
-                                   form=form,
-                                   message="Введён неверный старый пароль")
-        if form.password.data != form.password_again.data:
-            return render_template('profil.html', title='Регистрация',
-                                   form=form,
-                                   message="Новые пароли не совпадают")
+    if request.method == "GET":
         db_sess = db_session.create_session()
-        if db_sess.query(User).filter(User.username == form.username.data).first() and\
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        if user:
+            form.name.data = user.name
+            form.surname.data = user.surname
+            form.username.data = user.username
+            form.about.data = user.about
+            posts = db_sess.query(Posts).filter(Posts.user_uploud == current_user.id)
+            gg = []
+            for i in posts:
+                gg.append(i)
+            gg.sort(key=lambda x: x.id, reverse=True)
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        if db_sess.query(User).filter(User.username == form.username.data).first() and \
                 current_user.id != db_sess.query(User).filter(User.username == form.username.data).first().id:
             return render_template('profil.html', title='Регистрация',
                                    form=form,
@@ -145,10 +154,33 @@ def profil():
         user.surname = form.surname.data
         user.username = form.username.data
         user.about = form.about.data
-        user.set_password(form.password.data)
         db_sess.commit()
         return redirect('/')
-    return render_template('profil.html', title='Регистрация', form=form)
+    return render_template('profil.html', title='Регистрация', form=form, posts=gg)
+
+
+@app.route('/profil/<int:id>', methods=['GET', 'POST'])
+def other_profil(id):
+    form = ProfilForm()
+    if request.method == "GET":
+        if current_user.is_active:
+            if id == current_user.id:
+                return redirect('/profil')
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == id).first()
+        if user:
+            form.name.data = user.name
+            form.surname.data = user.surname
+            form.username.data = user.username
+            form.about.data = user.about
+            posts = db_sess.query(Posts).filter(Posts.user_uploud == id)
+            gg = []
+            for i in posts:
+                gg.append(i)
+            gg.sort(key=lambda x: x.id, reverse=True)
+        else:
+            abort(404)
+    return render_template('other_profil.html', user=user, posts=gg, title='Профиль ' + str(user.username))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -214,53 +246,57 @@ def download_file(id):
     return send_file(post_download.original_f_s_l)
 
 
-@app.route('/job/<int:id>', methods=['GET', 'POST'])
+@app.route('/post/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_news(id):
-    form = JobForm()
+    form = PostForm()
     if request.method == "GET":
         db_sess = db_session.create_session()
-        jobs = db_sess.query(Jobs).filter(Jobs.id == id,
-                                          (Jobs.user == current_user) | (current_user.id == 1)
-                                          ).first()
-        if jobs:
-            form.job_name.data = jobs.job_name
-            form.team_leader.data = jobs.team_leader
-            form.work_size.data = jobs.work_size
-            form.collaborators.data = jobs.collaborators
-            form.is_finished.data = jobs.is_finished
+        post = db_sess.query(Posts).filter(Posts.id == id,
+                                           (Posts.user == current_user) | (current_user.id == 1)
+                                           ).first()
+        if post:
+            form.tegs.data = post.tegs
+            form.about.data = post.about
         else:
             abort(404)
-    if form.validate_on_submit():
+    if request.method == 'POST':
         db_sess = db_session.create_session()
-        jobs = db_sess.query(Jobs).filter(Jobs.id == id,
-                                          (Jobs.user == current_user) | (current_user.id == 1)
-                                          ).first()
-        if jobs:
-            jobs.job_name = form.job_name.data
-            jobs.team_leader = form.team_leader.data
-            jobs.work_size = form.work_size.data
-            jobs.collaborators = form.collaborators.data
-            jobs.is_finished = form.is_finished.data
+        post = db_sess.query(Posts).filter(Posts.id == id,
+                                           (Posts.user == current_user) | (current_user.id == 1)
+                                           ).first()
+        if post:
+            post.tegs = form.tegs.data
+            post.about = form.about.data
             db_sess.commit()
             return redirect('/')
         else:
             abort(404)
     return render_template('post.html',
-                           title='Редактирование новости',
-                           form=form
-                           )
+                           title='Редактирование поста',
+                           form=form,
+                           post=post)
 
 
-@app.route('/job_delete/<int:id>', methods=['GET', 'POST'])
+@app.route('/post_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
-def news_delete(id):
+def posts_delete(id):
     db_sess = db_session.create_session()
-    jobs = db_sess.query(Jobs).filter(Jobs.id == id,
-                                      (Jobs.user == current_user) | (current_user.id == 1)
-                                      ).first()
-    if jobs:
-        db_sess.delete(jobs)
+    posts = db_sess.query(Posts).filter(Posts.id == id,
+                                        (Posts.user == current_user) | (current_user.id == 1)
+                                        ).first()
+    if posts:
+        if os.path.isfile(posts.original_f_s_l):
+            os.remove(posts.original_f_s_l)
+            print("success")
+        else:
+            print("File doesn't exists!")
+        if os.path.isfile(posts.scaled_f_s_l):
+            os.remove(posts.scaled_f_s_l)
+            print("success")
+        else:
+            print("File doesn't exists!")
+        db_sess.delete(posts)
         db_sess.commit()
     else:
         abort(404)

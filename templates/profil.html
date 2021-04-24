@@ -5,7 +5,7 @@
     {{ form.hidden_tag() }}
     <p>
         {{ form.name.label }}<br>
-        {{ form.name(class="form-control") }}<br>
+        {{ form.name(class="form-control")}}<br>
         {% for error in form.name.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
@@ -31,35 +31,8 @@
         {% endfor %}
     </p>
     <p>
-        {{ form.old_password.label }}<br>
-        {{ form.old_password(class="form-control", type="password") }}<br>
-        {% for error in form.old_password.errors %}
-            <p class="alert alert-danger" role="alert">
-                {{ error }}
-            </p>
-        {% endfor %}
-    </p>
-    <p>
-        {{ form.password.label }}<br>
-        {{ form.password(class="form-control", type="password") }}<br>
-        {% for error in form.password.errors %}
-            <p class="alert alert-danger" role="alert">
-                {{ error }}
-            </p>
-        {% endfor %}
-    </p>
-    <p>
-        {{ form.password_again.label }}<br>
-        {{ form.password_again(class="form-control", type="password") }}<br>
-        {% for error in form.password_again.errors %}
-            <p class="alert alert-danger" role="alert">
-                {{ error }}
-            </p>
-        {% endfor %}
-    </p>
-    <p>
         {{ form.about.label }}<br>
-        {{ form.about(class="form-control", type="password") }}<br>
+        {{ form.about(class="form-control") }}<br>
         {% for error in form.about.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
@@ -70,4 +43,13 @@
     {{message}}
     <a class="btn btn-danger" href="/logout">Выйти</a>
 </form>
+<article>
+    {% for item in posts %}
+    <a href="#lightbox" data-toggle="modal" data-slide-to={{loop.index0}}>
+  <section>
+      <img src=/{{item.scaled_f_s_l}} height="100%" width="100%">
+      </section>
+    </a>
+    {% endfor %}
+</article>
 {% endblock %}

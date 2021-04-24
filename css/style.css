@@ -1,0 +1,54 @@
+
+*, *:before, *:after {box-sizing:  border-box !important;}
+
+
+main{margin-left: 80px;
+    margin-right: 50px}
+body{background-color: #e1e2de}
+
+article {
+ -moz-column-width: 30em;
+ -webkit-column-width: 30em;
+ -moz-column-gap: 1em;
+ -webkit-column-gap: 1em;
+
+}
+
+section {
+ display: inline-block;
+ margin:  0.25rem;
+ padding:  0.25rem;
+ width:  100%;
+ background:  black;
+}
+
+p {
+ margin:  1rem 0;
+}
+
+body {
+ padding:  1em;
+ font-family:  "Garamond", serif;
+}
+
+h1 {
+  font-size:  3rem;
+  font-weight:  800;
+}
+
+body {
+  line-height:  1.25;
+}
+
+
+p {
+ text-align:  left;
+}
+
+#posts1{margin: 20px 120px}
+
+#posts2{margin: 20px 120px}
+
+.modal.and.carousel {
+  position: fixed; // Needed because the carousel overrides the position property
+}

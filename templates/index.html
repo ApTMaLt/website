@@ -2,7 +2,7 @@
 
 {% block content %}
 {% if current_user.is_authenticated %}
-    <a href="post" class="btn btn-secondary">Добавить новость</a>
+<a href="post" class="btn btn-secondary">Добавить новость</a>
 {% endif %}
 <form action="" method="post">
     {{ searchform.hidden_tag() }}
@@ -10,12 +10,12 @@
         {{ searchform.search.label }}<br>
         {{ searchform.search(class="form-control") }}<br>
         {% for error in searchform.search.errors %}
-            <p class="alert alert-danger" role="alert">
-                {{ error }}
-            </p>
-        {% endfor %}
+    <p class="alert alert-danger" role="alert">
+        {{ error }}
     </p>
-    <p>{{ searchform.submit(type="submit", class="btn btn-primer", href="/") }}</p>
+    {% endfor %}
+    </p>
+    <p>{{ searchform.submit(type="submit", class="btn btn-success", href="/") }}</p>
     {{message}}
 </form>
 <h1>Pure CSS Masonry</h1>
@@ -24,54 +24,87 @@
 <article>
     {% for item in posts %}
     <a href="#lightbox" data-toggle="modal" data-slide-to={{loop.index0}}>
-  <section>
-      <img src={{item.scaled_f_s_l}} height="100%" width="100%">
-      </section>
+        <section>
+            <img src={{item.scaled_f_s_l}} height="100%" width="100%">
+        </section>
     </a>
     {% endfor %}
 </article>
 
 <div class="modal fade and carousel slide" id="lightbox">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-body">
-          <ol class="carousel-indicators">
-              {% for item in posts %}
-                <li data-target="#lightbox" data-slide-to={{loop.index0}} class="active"></li>
-              {% endfor %}
-          </ol>
-          <div class="carousel-inner">
-              {% for item in posts %}
-                {% if loop.first %}
-              {% set a = item.id %}
+        <div class="modal-content">
+            <div class="modal-body" id="maodal_body">
+                <ol class="carousel-indicators">
+                    {% for item in posts %}
+                    <li data-target="#lightbox" data-slide-to={{loop.index0}} class="active"></li>
+                    {% endfor %}
+                </ol>
+                <div class="carousel-inner">
+                    {% for item in posts %}
+                    {% if loop.first %}
+                    {% set a = item.id %}
                     <div class="carousel-item active">
-                        <p>{{a}}</p>
-                      <img class="d-block img-fluid" src={{item.original_f_s_l}} alt={{loop.index0}}>
-                        <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
-                        <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
+                        <img class="d-block img-fluid" src={{item.original_f_s_l}} alt={{loop.index0}}>
+                        <div id="posts1">
+                            <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button"
+                               aria-pressed="true">Скачать</a>
+                            <h1>Теги: {{item.tegs}}</h1>
+                            <p>Описание: {{item.about}}</p>
+                            <a class="navbar-brand" href="profil/{{item.user_uploud}}"><img src=/{{item.user.avatar}}
+                                                                                            width="10%" height="10%">{{
+                                item.user.username }} </a>
+                            {% if current_user.is_authenticated and current_user == item.user or current_user.id == 1%}
+                            <div>
+                                <a href="/post/{{ item.id }}" class="btn btn-warning">
+                                    Изменить
+                                </a>
+                                <a href="/post_delete/{{ item.id }}" class="btn btn-danger">
+                                    Удалить
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
-                {% else %}
-              {% set a = item.id %}
+                    {% else %}
+                    {% set a = item.id %}
                     <div class="carousel-item">
-                        <p>{{a}}</p>
-                      <img class="d-block img-fluid" src={{item.original_f_s_l}} alt={{loop.index0}}>
-                        <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
-                        <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Скачать</a>
+                        <img class="d-block img-fluid" src={{item.original_f_s_l}} alt={{loop.index0}}>
+                        <div id="posts2">
+                            <a href="download/{{a}}" class="btn btn-primary btn-lg active" role="button"
+                               aria-pressed="true">Скачать</a>
+                            <h1>Теги: {{item.tegs}}</h1>
+                            <p>Описание: {{item.about}}</p>
+                            <a class="navbar-brand" href="profil/{{item.user_uploud}}"><img src=/{{item.user.avatar}}
+                                                                                            width="10%" height="10%">{{
+                                item.user.username }} </a>
+                            {% if current_user.is_authenticated and current_user == item.user or current_user.id == 1%}
+                            <div>
+                                <a href="/post/{{ item.id }}" class="btn btn-warning">
+                                    Изменить
+                                </a>
+                                <a href="/post_delete/{{ item.id }}" class="btn btn-danger">
+                                    Удалить
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
-                {% endif %}
-              {% endfor %}
-          </div><!-- /.carousel-inner -->
-          <a class="carousel-control-prev" href="#lightbox" role="button" data-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Previous</span>
-          </a>
-          <a class="carousel-control-next" href="#lightbox" role="button" data-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Next</span>
-          </a>
+                    {% endif %}
+                    {% endfor %}
+                </div><!-- /.carousel-inner -->
+                <a class="carousel-control-prev" href="#lightbox" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#lightbox" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
             </div><!-- /.modal-body -->
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
+        </div>
+    </div><!-- /.modal-content -->
+</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 {% endblock %}
