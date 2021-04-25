@@ -1,4 +1,3 @@
-@import "compass/css3";
 
 *, *:before, *:after {box-sizing:  border-box !important;}
 
@@ -23,25 +22,14 @@ section {
  background:  black;
 }
 
-
 p {
  margin:  1rem 0;
 }
-
-
-
-
-/*  styles for background color, etc; not necessary for this thing to work  */
-
-
 
 body {
  padding:  1em;
  font-family:  "Garamond", serif;
 }
-
-
-
 
 h1 {
   font-size:  3rem;
@@ -56,6 +44,10 @@ body {
 p {
  text-align:  left;
 }
+
+#posts1{margin: 20px 120px}
+
+#posts2{margin: 20px 120px}
 
 .modal.and.carousel {
   position: fixed; // Needed because the carousel overrides the position property

@@ -1,5 +1,5 @@
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from data import db_session
+from data import db_session, posts_api
 from data.login import LoginForm
 from data.users import User
 from data.posts import Posts
@@ -8,7 +8,7 @@ from forms.profil import ProfilForm
 from forms.search import SearchForm
 from forms.post import PostForm
 import os
-from flask import Flask, flash, request, redirect, url_for, render_template, make_response, session, abort, send_file
+from flask import Flask, flash, request, redirect, jsonify, render_template, make_response, session, abort, send_file
 from werkzeug.utils import secure_filename
 from PIL import Image
 import requests
@@ -60,7 +60,7 @@ def index():
     for i in posts:
         gg.append(i)
     gg.sort(key=lambda x: x.id, reverse=True)
-    return render_template("index.html", posts=gg, searchform=searchform)
+    return render_template("index.html", posts=gg, searchform=searchform, title='Главная страница')
 
 
 @app.route("/unsplash", methods=['GET', 'POST'])
@@ -72,10 +72,10 @@ def unsplash():
         bb = ''
     if bb != '':
         geocoder_request = [
-            f"https://api.unsplash.com/search/photos?client_id=x&query={bb}&per_page=30"]
+            f"https://api.unsplash.com/search/photos?client_id=NGbcLeb-P3bs4CN6I9nxdkQw36zNSnCNz7tF-zGOIws&query={bb}&per_page=30", ]
     else:
         geocoder_request = [
-            "https://api.unsplash.com/photos/random?client_id=x&count=30"]
+            "https://api.unsplash.com/photos/random?client_id=NGbcLeb-P3bs4CN6I9nxdkQw36zNSnCNz7tF-zGOIws&count=30", ]
     for i in geocoder_request:
         response = requests.get(i)
         if response:
@@ -85,7 +85,7 @@ def unsplash():
                 gg = gg['results']
         else:
             print(response)
-    return render_template("unsplash.html", posts=gg, searchform=searchform)
+    return render_template("unsplash.html", posts=gg, searchform=searchform, title='Фото с Unsplash.com')
 
 
 @login_manager.user_loader
@@ -156,7 +156,7 @@ def profil():
         user.about = form.about.data
         db_sess.commit()
         return redirect('/')
-    return render_template('profil.html', title='Регистрация', form=form, posts=gg)
+    return render_template('profil.html', title='Мой профиль', form=form, posts=gg)
 
 
 @app.route('/profil/<int:id>', methods=['GET', 'POST'])
@@ -230,12 +230,18 @@ def add_news():
             posts.scaled_f_s_l = 'static/img/scaled/' + str(filename)
             posts.tegs = form.tegs.data
             posts.about = form.about.data
-            posts.is_private = form.is_private.data
             current_user.posts.append(posts)
             db_sess.merge(current_user)
             db_sess.commit()
+            post = db_sess.query(Posts).filter(Posts.tegs == form.tegs.data, Posts.about == form.about.data,
+                                               Posts.original_f_s_l == 'static/img/original/' + str(filename),
+                                               Posts.scaled_f_s_l == 'static/img/scaled/' + str(filename),
+                                               ).first()
+            post.original_img = 'http://127.0.0.1:5000/download/' + str(post.id)
+            post.scaled_img = 'http://127.0.0.1:5000/download/scaled/' + str(post.id)
+            db_sess.commit()
             return redirect('/')
-    return render_template('post.html', title='Добавление работы',
+    return render_template('post.html', title='Создание поста',
                            form=form)
 
 
@@ -244,6 +250,13 @@ def download_file(id):
     db_sess = db_session.create_session()
     post_download = db_sess.query(Posts).filter(Posts.id == id).first()
     return send_file(post_download.original_f_s_l)
+
+
+@app.route('/download/scaled/<int:id>')
+def download_scaled_file(id):
+    db_sess = db_session.create_session()
+    post_download = db_sess.query(Posts).filter(Posts.id == id).first()
+    return send_file(post_download.scaled_f_s_l)
 
 
 @app.route('/post/<int:id>', methods=['GET', 'POST'])
@@ -304,7 +317,8 @@ def posts_delete(id):
 
 
 def main():
-    db_session.global_init("db/blogs.db")
+    db_session.global_init("db/posts.db")
+    app.register_blueprint(posts_api.blueprint)
     app.run()
 
 
