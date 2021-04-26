@@ -14,7 +14,7 @@ from PIL import Image
 import requests
 
 UPLOAD_FOLDER = 'static/img/original/'
-ALLOWED_EXTENSIONS = {'dng', 'png', 'jpg', 'jpeg'}
+ALLOWED_EXTENSIONS = {'dng', 'png', 'jpg', 'jpeg', 'gif'}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
@@ -22,11 +22,7 @@ login_manager.init_app(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-def scale_image(input_image_path,
-                output_image_path,
-                width=None,
-                height=None
-                ):
+def scale_image(input_image_path, output_image_path, width=None, height=None):  # изменнеие размеров фотографии
     original_image = Image.open(input_image_path)
     w, h = original_image.size
     if width and height:
@@ -48,44 +44,46 @@ def allowed_file(filename):
 
 
 @app.route("/", methods=['GET', 'POST'])
-def index():
-    searchform = SearchForm()
+def index():  # главная страница
+    searchform = SearchForm()  # форма для поиска
     if searchform.validate_on_submit():
-        bb = searchform.search.data
+        search = searchform.search.data
     else:
-        bb = ''
+        search = ''
     db_sess = db_session.create_session()
-    posts = db_sess.query(Posts).filter(Posts.tegs.like(f'%{bb}%'))
-    gg = []
+    posts = db_sess.query(Posts).filter(Posts.tegs.like(f'%{search}%'))  # поиск изображения с тегом
+    response = []
     for i in posts:
-        gg.append(i)
-    gg.sort(key=lambda x: x.id, reverse=True)
-    return render_template("index.html", posts=gg, searchform=searchform, title='Главная страница')
+        response.append(i)
+    response.sort(key=lambda x: x.id, reverse=True)  # сортировка по времени добавления
+    return render_template("index.html", posts=response, searchform=searchform, title='Главная страница')
 
 
 @app.route("/unsplash", methods=['GET', 'POST'])
-def unsplash():
-    searchform = SearchForm()
+def unsplash():  # изображения с Unsplash
+    searchform = SearchForm()  # форма для поиска
     if searchform.validate_on_submit():
-        bb = searchform.search.data
+        search = searchform.search.data
     else:
-        bb = ''
-    if bb != '':
-        geocoder_request = [
-            f"https://api.unsplash.com/search/photos?client_id=NGbcLeb-P3bs4CN6I9nxdkQw36zNSnCNz7tF-zGOIws&query={bb}&per_page=30", ]
+        search = ''
+    if search != '':
+        unsplash_request = [
+            f"https://api.unsplash.com/search/photos?client_id=NGbcLeb-P3bs4CN6I9nxdkQw36zNSnCNz7tF-zGOIws&query={bb}"
+            f"&per_page=30"]  # поиск 30 изображений с тегом
     else:
-        geocoder_request = [
-            "https://api.unsplash.com/photos/random?client_id=NGbcLeb-P3bs4CN6I9nxdkQw36zNSnCNz7tF-zGOIws&count=30", ]
-    for i in geocoder_request:
-        response = requests.get(i)
+        unsplash_request = [
+            "https://api.unsplash.com/photos/random?client_id=NGbcLeb-P3bs4CN6I9nxdkQw36zNSnCNz7tF-zGOIws&count=30"]
+        # 30 случайных изображений
+    for i in unsplash_request:
+        response = requests.get(i)  # делаем запрос
         if response:
-            gg = response.json()
+            json_response = response.json()
             # Преобразуем ответ в json-объект
-            if bb != '':
-                gg = gg['results']
+            if search != '':
+                json_response = json_response['results']
         else:
             print(response)
-    return render_template("unsplash.html", posts=gg, searchform=searchform, title='Фото с Unsplash.com')
+    return render_template("unsplash.html", posts=json_response, searchform=searchform, title='Фото с Unsplash.com')
 
 
 @login_manager.user_loader
@@ -95,22 +93,23 @@ def load_user(user_id):
 
 
 @app.route('/register', methods=['GET', 'POST'])
-def reqister():
-    form = RegisterForm()
+def reqister():  # страница регистрации
+    form = RegisterForm()  # форма для регистрации
     if form.validate_on_submit():
-        if form.password.data != form.password_again.data:
+        if form.password.data != form.password_again.data:  # проверка на совпадение введённых паролей
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Пароли не совпадают")
         db_sess = db_session.create_session()
-        if db_sess.query(User).filter(User.email == form.email.data).first():
+        if db_sess.query(User).filter(User.email == form.email.data).first():  # проверка на уникальность email
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
-        if db_sess.query(User).filter(User.username == form.username.data).first():
+        if db_sess.query(User).filter(User.username == form.username.data).first():  # проверка на уникальность никнейма
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой никнейм занят")
+        # создание новго пользователя
         user = User(
             name=form.name.data,
             surname=form.surname.data,
@@ -125,30 +124,34 @@ def reqister():
 
 
 @app.route('/profil', methods=['GET', 'POST'])
-def profil():
-    form = ProfilForm()
+def profil():  # страница личного профиля пользователя
+    form = ProfilForm()  # форма для личного профиля пользователя
     if request.method == "GET":
         db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        user = db_sess.query(User).filter(User.id == current_user.id).first()  # находим пользователя в базе данных
         if user:
+            # автоматически заполняем форму
             form.name.data = user.name
             form.surname.data = user.surname
             form.username.data = user.username
             form.about.data = user.about
             posts = db_sess.query(Posts).filter(Posts.user_uploud == current_user.id)
-            gg = []
+            response = []
             for i in posts:
-                gg.append(i)
-            gg.sort(key=lambda x: x.id, reverse=True)
+                response.append(i)
+            response.sort(key=lambda x: x.id, reverse=True)  # сортировка по времени добавления
         else:
             abort(404)
     if form.validate_on_submit():
+        # если нажата кнопка сохранить
         db_sess = db_session.create_session()
+        # проверка на уникальность никнейма
         if db_sess.query(User).filter(User.username == form.username.data).first() and \
                 current_user.id != db_sess.query(User).filter(User.username == form.username.data).first().id:
-            return render_template('profil.html', title='Регистрация',
+            return render_template('profil.html', title='Мой профиль',
                                    form=form,
                                    message="Такой никнейм занят")
+        # сохраняем изменения
         user = db_sess.query(User).filter(User.id == current_user.id).first()
         user.name = form.name.data
         user.surname = form.surname.data
@@ -156,41 +159,42 @@ def profil():
         user.about = form.about.data
         db_sess.commit()
         return redirect('/')
-    return render_template('profil.html', title='Мой профиль', form=form, posts=gg)
+    return render_template('profil.html', title='Мой профиль', form=form, posts=response)
 
 
 @app.route('/profil/<int:id>', methods=['GET', 'POST'])
-def other_profil(id):
-    form = ProfilForm()
+def other_profil(id):  # страница профиля другого пользователя
+    form = ProfilForm()  # форма для профиля другого пользователя
     if request.method == "GET":
         if current_user.is_active:
-            if id == current_user.id:
+            if id == current_user.id:  # проверка на попытки пользователя открыть свой же профиль
                 return redirect('/profil')
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == id).first()
         if user:
+            # заполнение неизменяемых форм
             form.name.data = user.name
             form.surname.data = user.surname
             form.username.data = user.username
             form.about.data = user.about
             posts = db_sess.query(Posts).filter(Posts.user_uploud == id)
-            gg = []
+            response = []
             for i in posts:
-                gg.append(i)
-            gg.sort(key=lambda x: x.id, reverse=True)
+                response.append(i)
+            response.sort(key=lambda x: x.id, reverse=True)  # сортировка по времени добавления
         else:
             abort(404)
-    return render_template('other_profil.html', user=user, posts=gg, title='Профиль ' + str(user.username))
+    return render_template('other_profil.html', user=user, posts=response, title='Профиль ' + str(user.username))
 
 
 @app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
+def login():  # страница для входа
+    form = LoginForm()  # форма для входа
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.email == form.email.data).first()
+        user = db_sess.query(User).filter(User.email == form.email.data).first()  # поиск пользователя по email
         if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember_me.data)
+            login_user(user, remember=form.remember_me.data)  # если email и пароль верны то происходит вход
             return redirect("/")
         return render_template('login.html',
                                message="Неправильный логин или пароль",
@@ -207,11 +211,12 @@ def logout():
 
 @app.route('/post', methods=['GET', 'POST'])
 @login_required
-def add_news():
-    form = PostForm()
+def add_posts():  # страница для создания поста
+    form = PostForm()  # форма для создания поста
     db_sess = db_session.create_session()
     posts = Posts()
     if request.method == 'POST':
+        # скачивание изображения
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
@@ -221,6 +226,7 @@ def add_news():
                                    message="Файл не выбран",
                                    form=form)
         if file and allowed_file(file.filename):
+            # если файл получен и все поля заполнены сохраняем введённое
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             scale_image(input_image_path='static/img/original/' + str(filename),
@@ -246,14 +252,14 @@ def add_news():
 
 
 @app.route('/download/<int:id>')
-def download_file(id):
+def download_file(id):  # страница где сервер отдаёт оригинальный файл пользователю
     db_sess = db_session.create_session()
     post_download = db_sess.query(Posts).filter(Posts.id == id).first()
     return send_file(post_download.original_f_s_l)
 
 
 @app.route('/download/scaled/<int:id>')
-def download_scaled_file(id):
+def download_scaled_file(id):  # страница где сервер отдаёт сжатый файл пользователю
     db_sess = db_session.create_session()
     post_download = db_sess.query(Posts).filter(Posts.id == id).first()
     return send_file(post_download.scaled_f_s_l)
@@ -261,24 +267,22 @@ def download_scaled_file(id):
 
 @app.route('/post/<int:id>', methods=['GET', 'POST'])
 @login_required
-def edit_news(id):
-    form = PostForm()
+def edit_posts(id):  # страница для изменения поста
+    form = PostForm()  # форма для изменения поста
+    db_sess = db_session.create_session()
+    post = db_sess.query(Posts).filter(Posts.id == id,
+                                       (Posts.user == current_user) | (current_user.id == 1)
+                                       ).first()
     if request.method == "GET":
-        db_sess = db_session.create_session()
-        post = db_sess.query(Posts).filter(Posts.id == id,
-                                           (Posts.user == current_user) | (current_user.id == 1)
-                                           ).first()
         if post:
+            # если пост существует то автоматически заполняем поля
             form.tegs.data = post.tegs
             form.about.data = post.about
         else:
             abort(404)
     if request.method == 'POST':
-        db_sess = db_session.create_session()
-        post = db_sess.query(Posts).filter(Posts.id == id,
-                                           (Posts.user == current_user) | (current_user.id == 1)
-                                           ).first()
         if post:
+            # сохраняем изменения
             post.tegs = form.tegs.data
             post.about = form.about.data
             db_sess.commit()
@@ -293,13 +297,13 @@ def edit_news(id):
 
 @app.route('/post_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
-def posts_delete(id):
+def posts_delete(id):  # страница для удаления поста
     db_sess = db_session.create_session()
     posts = db_sess.query(Posts).filter(Posts.id == id,
                                         (Posts.user == current_user) | (current_user.id == 1)
                                         ).first()
-    if posts:
-        if os.path.isfile(posts.original_f_s_l):
+    if posts:  # существует ли пост
+        if os.path.isfile(posts.original_f_s_l):  # существуют ли оригинальное и сжатое изображение
             os.remove(posts.original_f_s_l)
             print("success")
         else:
@@ -309,7 +313,7 @@ def posts_delete(id):
             print("success")
         else:
             print("File doesn't exists!")
-        db_sess.delete(posts)
+        db_sess.delete(posts)  # удаление поста
         db_sess.commit()
     else:
         abort(404)

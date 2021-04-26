@@ -7,6 +7,6 @@ from wtforms.validators import DataRequired
 class PostForm(FlaskForm):
     file = FileField('Фото')
     tegs = StringField('Теги', validators=[DataRequired()])
-    about = TextAreaField('Описание (необязательно)', validators=[DataRequired()])
+    about = TextAreaField('Описание', validators=[DataRequired()])
     is_private = BooleanField("Личное")
     submit = SubmitField('Опубликовать')

@@ -3,7 +3,7 @@
 {% block content %}
 <form method=post enctype=multipart/form-data>
     {% if title == 'Редактирование поста' %}
-        <img src=/{{post.scaled_f_s_l}} alt={{post.id}}>
+        <img src=/{{post.original_f_s_l}} width="80%" height="80%" alt={{post.id}}>
     {% else %}
     <input type=file name=file>
     {% endif %}

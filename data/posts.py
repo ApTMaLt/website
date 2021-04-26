@@ -16,5 +16,4 @@ class Posts(SqlAlchemyBase, SerializerMixin):
                                     sqlalchemy.ForeignKey("users.id"))
     tegs = sqlalchemy.Column(sqlalchemy.String)
     about = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
-    is_private = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
     user = orm.relation('User')
