@@ -68,7 +68,7 @@ def unsplash():  # изображения с Unsplash
         search = ''
     if search != '':
         unsplash_request = [
-            f"https://api.unsplash.com/search/photos?client_id=NGbcLeb-P3bs4CN6I9nxdkQw36zNSnCNz7tF-zGOIws&query={bb}"
+            f"https://api.unsplash.com/search/photos?client_id=NGbcLeb-P3bs4CN6I9nxdkQw36zNSnCNz7tF-zGOIws&query={search}"
             f"&per_page=30"]  # поиск 30 изображений с тегом
     else:
         unsplash_request = [
